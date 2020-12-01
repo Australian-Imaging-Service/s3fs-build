@@ -1,0 +1,10 @@
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    kubernetes.io/tls-acme: "true"
+  hosts:
+    - s3dev.cmca.uwa.edu.au
+resources:
+  requests:
+    memory: 1Gi

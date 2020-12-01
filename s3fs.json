@@ -1,0 +1,67 @@
+{
+  "variables": {
+    "s3fs_version": "1.84"
+  },
+
+  "provisioners": [
+    {
+      "type": "shell",
+      "environment_vars": [
+        "DEBIAN_FRONTEND=noninteractive"
+      ],
+      "inline": [
+        "apt-get update",
+        "apt-get -y install libnss-wrapper s3fs",
+        "mkdir -p /docker-entrypoint.d",
+        "rm -rf /var/lib/apt/lists/*"
+      ]
+    },
+    {
+      "type": "file",
+      "source": "./docker-entrypoint.d/",
+      "destination": "/docker-entrypoint.d",
+      "only": ["docker"]
+    },
+    {
+      "type": "file",
+      "source": "./docker-entrypoint.sh",
+      "destination": "/docker-entrypoint.sh",
+      "only": ["docker"]
+    },
+    {
+      "type": "file",
+      "source": "./s3fs.json",
+      "destination": "/packer-build.json"
+    }
+  ],
+
+  "post-processors": [
+    [
+      {
+        "type": "docker-tag",
+        "repository": "localhost:32000/s3fs",
+        "tag": "{{user `s3fs_version`}}",
+        "only": [ "docker" ]
+      },
+      {
+        "type": "docker-tag",
+        "repository": "cerds/s3fs",
+        "tag": "{{user `s3fs_version`}}",
+        "only": [ "docker" ]
+      }
+    ]
+  ],
+
+  "builders": [
+    {
+      "type": "docker",
+      "image": "debian:buster-slim",
+      "commit": true,
+      "changes": [
+        "CMD [\"tail\",\"-f\",\"/dev/null\"]",
+        "ENTRYPOINT [\"/docker-entrypoint.sh\"]",
+        "LABEL maintainer=\"Dean Taylor <dean.taylor@uwa.edu.au>\""
+      ]
+    }
+  ]
+}

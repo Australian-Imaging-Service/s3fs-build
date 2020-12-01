@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: s3fs
+spec:
+  containers:
+    - name: s3fs
+      image: localhost:32000/s3fs:1.84
+      imagePullPolicy: Always
+      env:
+        - name: AWSACCESSKEYID
+          value: 'fcIZ6sjuZaX5sxM8v6t5'
+        - name: AWSSECRETACCESSKEY
+          value: 'T0fwpoH4IDryyjHdMFX0oSz0Pxsrvwt1pxoRshuT'
+        - name: S3FS_EMPTYDIR
+          value: '/vol'
+        - name: S3FS_OPTIONS
+          value: 'allow_other,uid=1000,use_path_request_style,url=http://minio-1606344459.minio.svc.cluster.local:9000'
+        - name: S3FS_BUCKET01
+          value: 'project1'
+        - name: S3FS_BUCKET02
+          value: 'project2'
+        - name: S3FS_BUCKET03
+          value: 'project3'
+      volumeMounts:
+        - mountPath: /vol
+          name: vol
+          mountPropagation: Bidirectional
+      securityContext:
+        privileged: true
+        runAsGroup: 0
+        runAsUser: 0
+    - name: s3fs-client
+      image: busybox
+      command: ["tail","-f","/dev/null"]
+      volumeMounts:
+        - mountPath: /vol
+          name: vol
+          mountPropagation: HostToContainer
+  securityContext:
+    fsGroup: 2000
+    runAsUser: 1000
+    runAsGroup: 1000
+  volumes:
+    - name: vol
+      emptyDir: {}
