@@ -22,36 +22,24 @@ if ! [ -f "${passwd_file}" -o -f "${HOME}/.aws/credentials" -o -f "${HOME}/.pass
 		{ 1>&2 echo "ERROR: Credentials have not been provided, please make reference to the README for options"; exit 128; }
 fi
 
-function cleanup {
-	for varname in ${!S3FS_BUCKET*}; do
-		declare -n bucket=$varname
-		IFS=':' read -r bucket_name bucket_path <<< "${bucket}"
-		echo "INFO: umount ${S3FS_EMPTYDIR}/${bucket_name}"
-		umount "${S3FS_EMPTYDIR}/${bucket_name}" | true
-	done
-	# Verify umount of all volumes has completed
-	i=0
-	while mount |grep -q 'type fuse.s3fs '; do
-		if [[ $i -ge 30 ]]; then
-			2>&1 2>$1 echo "ERROR: Not all buckets have unmounted, mount(s) listed below"
-			2>&1 mount |grep 'type fuse.s3fs '
-			i=0
-		else
-			i=$((i+1))
-		fi
-		sleep 2
-	done
-}
-trap cleanup EXIT
-set -e
-
 for varname in ${!S3FS_BUCKET*}; do
 	declare -n bucket=$varname
 	IFS=':' read -r bucket_name bucket_path <<< "${bucket}"
 	[ -d "${S3FS_EMPTYDIR}/${bucket_name}" ] || mkdir -p "${S3FS_EMPTYDIR}/${bucket_name}"
-	echo "INFO: s3fs $bucket ${S3FS_EMPTYDIR}/${bucket_name} -o ${S3FS_OPTIONS} -f &"
-	s3fs $bucket ${S3FS_EMPTYDIR}/${bucket_name} -o ${S3FS_OPTIONS} -f &
+
+    # Spit out supervisor config files for each bucket.
+    cat <<EOF > /etc/supervisor/conf.d/$varname.conf
+[program:$varname]
+command=s3fs $bucket ${S3FS_EMPTYDIR}/${bucket_name} -o ${S3FS_OPTIONS} -f
+# FIXME
+user=root
+exitcodes=0,2
+autostart=true
+stdout_logfile=/dev/fd/1
+stdout_logfile_maxbytes=0
+redirect_stderr=true
+EOF
 done
 
 # CMD run
-$@
+exec $@

@@ -8,6 +8,11 @@ A side container to mount S3 buckets as FUSE.
 
 `use_path_request_style` option setting is required. There are some fundamental differences in the way Minio presents buckets via the URL than AWS S3 that requires some changes to the default s3fs settings. Namely the path to the s3 bucket is not part of the DNS prefix but a sub-path reference. I.e., AWS s3 https://BUCKET.s3.amazonaws.com == Minio https://s3.yourMinio.local/BUCKET.
 
+## Misc Notes
+
+* If using a subdirectory such as `project1:/some/path`, s3fs WON'T start unless `/some/path` exists.
+* MinIO options are passed in S3FS_OPTIONS as `x=a,y=b,z=c`
+
 ## References
 
 * [s3fs-fuse project](https://github.com/s3fs-fuse/s3fs-fuse)
