@@ -11,7 +11,7 @@
       ],
       "inline": [
         "apt-get update",
-        "apt-get -y install libnss-wrapper s3fs",
+        "apt-get -y install libnss-wrapper s3fs supervisor",
         "mkdir -p /docker-entrypoint.d",
         "rm -rf /var/lib/apt/lists/*"
       ]
@@ -58,7 +58,7 @@
       "image": "debian:buster-slim",
       "commit": true,
       "changes": [
-        "CMD [\"tail\",\"-f\",\"/dev/null\"]",
+        "CMD [\"supervisord\", \"-c\", \"/etc/supervisor/supervisord.conf\", \"-n\"]",
         "ENTRYPOINT [\"/docker-entrypoint.sh\"]",
         "LABEL maintainer=\"Dean Taylor <dean.taylor@uwa.edu.au>\""
       ]
