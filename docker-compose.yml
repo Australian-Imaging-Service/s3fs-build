@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  minio:
+    image: minio/minio
+    volumes:
+      - data:/data
+    ports:
+      - "9000:9000"
+    command: server /data/minio
+    expose:
+      - 9000
+  s3fs:
+    image: s3fs
+    volumes:
+      - data:/data
+    environment:
+      AWSACCESSKEYID: minioadmin
+      AWSSECRETACCESSKEY: minioadmin
+      S3FS_EMPTYDIR: /data/vol
+      S3FS_OPTIONS: use_path_request_style,url=http://minio:9000
+      S3FS_BUCKET01: project1:/some/path
+      S3FS_BUCKET02: project2
+      S3FS_BUCKET03: project3
+    depends_on:
+      - minio
+    devices:
+      # For FUSE to work
+      - /dev/fuse
+    cap_add:
+      - SYS_ADMIN
+
+volumes:
+  data:
